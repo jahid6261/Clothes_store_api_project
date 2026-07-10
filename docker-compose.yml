@@ -1,0 +1,53 @@
+version: "3.9"
+
+services:
+  web:
+    build: .
+    container_name: clothstore-fastapi
+    ports:
+      - "8001:8000"
+    volumes:
+      - .:/app
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload  
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db: 
+    image: postgres:15-alpine
+    container_name: clothstore-postgres
+    environment:
+        POSTGRES_USER: ${POSTGRES_USER}
+        POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+        POSTGRES_DB: ${POSTGRES_DB}
+
+    ports:
+      - "5433:5432" 
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d clothstore"] 
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: always  
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: clothstore-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+
+    ports:
+      - "5051:80" 
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: always
+
+volumes:
+  postgres_data:
+  pgadmin_data:
