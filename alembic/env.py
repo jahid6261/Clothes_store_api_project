@@ -6,6 +6,7 @@ from sqlalchemy import pool
 from alembic import context
 
 from src.utils.db import DBModel
+from src.users.models import UserModel
 
 from src.utils.settings import settings
 
@@ -15,7 +16,10 @@ config = context.config
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
-config.set_main_option("sqlalchemy.url", settings.DATABASE_URL) 
+config.set_main_option(
+    "sqlalchemy.url",
+    settings.DATABASE_URL.replace("+asyncpg", "")
+) 
 
 
 if config.config_file_name is not None:
