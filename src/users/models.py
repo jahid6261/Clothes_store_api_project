@@ -22,7 +22,7 @@ class UserModel(DBModel):
     number=Column(String(15),index=True,nullable=False)
     address=Column(String(255),nullable=True)
 
-    is_active=Column(Boolean,default=True)
+    is_active=Column(Boolean,default=False)
     verification_token=Column(String(250),nullable=True)
     verification_token_expire=Column(DateTime,nullable=True)
 

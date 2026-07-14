@@ -11,6 +11,10 @@ from src.utils.security import hash_password,verify_password,encode_access_token
 from src.utils.security import settings
 from sqlalchemy.exc  import IntegrityError,SQLAlchemyError
 
+from src.utils.verification_token import generate_activation_token
+from src.core.task import send_email_service
+
+from datetime import datetime ,timedelta
 async def register(request:UserRegisterSchema,db:AsyncSession):
 
 
@@ -26,6 +30,11 @@ async def register(request:UserRegisterSchema,db:AsyncSession):
             status_code=400,
             detail="Email already exists."
         )
+    # Generate Token
+    token = generate_activation_token()
+
+    # expire Time
+    expire = datetime.utcnow() + timedelta(minutes=15)
 
     # Create user
     new_user = UserModel(
@@ -36,6 +45,10 @@ async def register(request:UserRegisterSchema,db:AsyncSession):
         number=request.number.strip(),
         address=request.address.strip(),
         role=UserRole.user,
+        is_active=False,
+        verification_token=token,
+        verification_token_expire=expire
+
     )
 
     db.add(new_user)
@@ -57,6 +70,36 @@ async def register(request:UserRegisterSchema,db:AsyncSession):
             status_code=500,
             detail="Database error occurred."
         )
+    
+    # verification link  
+
+    verification_link = f"{settings.BASE_URL}/users/activate/{token}"
+
+
+    email_body = f"""
+    Hi {new_user.first_name},
+
+   Thank you for registering at ClothStore.
+
+   Please click the link below to activate your account:
+
+   {verification_link}
+
+   This link will expire in 15 minutes.
+
+   If you did not create this account, you can ignore this email.
+
+  Thank you,
+  ClothStore Team
+  """
+
+    # send email by celery
+
+    send_email_service.delay(
+    email_to=new_user.email,
+    email_subject="Activate Your Account",
+    email_body=email_body,
+)
 
     return UserResponseSchema(
         id=new_user.id,
@@ -72,7 +115,6 @@ async def register(request:UserRegisterSchema,db:AsyncSession):
     )
 
 
-
 async def login(request: UserLoginSchema, db: AsyncSession):
 
     email = request.email.strip().lower()
@@ -81,13 +123,29 @@ async def login(request: UserLoginSchema, db: AsyncSession):
         select(UserModel).where(UserModel.email == email)
     )
 
-    if not user or not verify_password(request.password, user.password):
+    
+    if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
     
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Please verify your email before logging in."
+        )
+
+   
+    if not verify_password(request.password, user.password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
     access_token = encode_access_token(
         user.id,
         user.email,
@@ -97,7 +155,6 @@ async def login(request: UserLoginSchema, db: AsyncSession):
     return TokenSchema(
         access_token=access_token,
     )
-
 
 
 async def profile(user:UserModel):
@@ -117,7 +174,55 @@ async def profile(user:UserModel):
             updated_at=user.updated_at,
             
         )
+
+
+async def activate_account_service(token:str,db:AsyncSession):
+
+     result = await db.execute(
+          select(UserModel).where(
+               UserModel.verification_token==token
+          )
+     )        
     
+     user = result.scalar_one_or_none()
+
+     if not user:
+          raise HTTPException(
+               status_code=status.HTTP_404_BAD_REQUEST,
+               detail="Invalid verification link"
+          )
+     if user.is_active:
+          raise HTTPException(
+               status_code=status.HTTP_404_BAD_REQUEST,
+               detail="Account is already activated"
+          )
+     
+     if (
+          user.verification_token_expire
+          and datetime.utcnow() > user.verification_token_expire
+     ):
+          raise HTTPException(
+               status_code=status.HTTP_404_BAD_REQUEST,
+               detail="verification link has expired "
+          )
+          
+
+     user.is_active = True
+     user.verification_token = None
+     user.verification_expire = None
+
+     await db.commit()
+     await db.refresh(user)
+
+     return {
+        "message": "Account activated successfully."
+     }
+
+
+
+
+     
+     
    
 
     

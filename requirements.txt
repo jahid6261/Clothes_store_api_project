@@ -12,3 +12,4 @@ greenlet
 python-dotenv
 pydantic-settings
 bcrypt
+celery

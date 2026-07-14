@@ -5,7 +5,7 @@ from fastapi import APIRouter ,Depends,status
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.utils.db import get_db
 from src.users.schemas import UserRegisterSchema,UserResponseSchema,UserLoginSchema,TokenSchema
-from src.users.service import register,login,profile
+from src.users.service import register,login,profile,activate_account_service
 from src.depends.auth_depends import get_current_user
 from src.users.models import UserModel
 user_router=APIRouter(prefix="/users",tags=['Users']
@@ -31,3 +31,12 @@ async def get_profile(
     current_user:UserModel=Depends(get_current_user)
 ):
     return await profile(current_user)
+
+
+
+@user_router.get("/activate/{token}")
+
+async def activate_account(token:str,db:AsyncSession=Depends(get_db)):
+
+
+     return await activate_account_service(token,db)
