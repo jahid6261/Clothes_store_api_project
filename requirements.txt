@@ -13,3 +13,5 @@ python-dotenv
 pydantic-settings
 bcrypt
 celery
+cloudinary
+python-multipart

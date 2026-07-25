@@ -14,6 +14,7 @@ from sqlalchemy.exc  import IntegrityError,SQLAlchemyError
 from src.utils.verification_token import generate_activation_token
 from src.core.task import send_email_service
 
+
 from datetime import datetime ,timedelta
 async def register(request:UserRegisterSchema,db:AsyncSession):
 

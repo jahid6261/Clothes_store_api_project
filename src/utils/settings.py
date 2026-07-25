@@ -20,6 +20,13 @@ class Settings(BaseSettings):
     CELERY_BROKER_URL:str
     BASE_URL:str
 
+
+    
+    CLOUDINARY_CLOUD_NAME: str
+    CLOUDINARY_API_KEY: str
+    CLOUDINARY_API_SECRET: str
+
+
 settings=Settings()
 
 
