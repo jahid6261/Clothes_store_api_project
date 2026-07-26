@@ -33,12 +33,7 @@ class  Product(DBModel):
     category=relationship("Category",back_populates="products")
 
     variants = relationship( "ProductVariant",back_populates="product",cascade="all, delete-orphan" )      
-    images = relationship(
-        "ProductImage",
-        back_populates="product",
-        cascade="all, delete-orphan"
-    )
- 
+
 
 
 
@@ -59,27 +54,31 @@ class ProductVariant(DBModel):
     
 
     product = relationship("Product", back_populates="variants")
+    images = relationship(
+    "ProductImage",
+    back_populates="variant",
+    cascade="all, delete-orphan"
+)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
-
-      
 class ProductImage(DBModel):
     __tablename__ = "product_images"
 
-    id = Column(Integer, primary_key=True)
-    product_id = Column(
-        ForeignKey("products.id", ondelete="CASCADE")
+    id = Column(Integer, primary_key=True, index=True)
+
+    variant_id = Column(
+        Integer,
+        ForeignKey("product_variants.id", ondelete="CASCADE"),
+        nullable=False
     )
 
     image_url = Column(String, nullable=False)
     public_id = Column(String, nullable=False)
 
-    product = relationship(
-        "Product",
+    variant = relationship(
+        "ProductVariant",
         back_populates="images"
     )
-
-
     
  
     
