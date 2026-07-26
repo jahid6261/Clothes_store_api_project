@@ -220,11 +220,6 @@ async def create_bulk_products(request:list[ProductSchema],db:AsyncSession):
             detail="Failed to crate Products"
         )
 
-
-        
-    
-   
- 
 async def product_by_id(product_id: int, db: AsyncSession):
 
     try:
@@ -233,8 +228,8 @@ async def product_by_id(product_id: int, db: AsyncSession):
             .where(Product.id == product_id)
             .options(
                 selectinload(Product.category),
-                selectinload(Product.variants),
-                selectinload(Product.images),
+                selectinload(Product.variants)
+                .selectinload(ProductVariant.images),
             )
         )
 
@@ -245,6 +240,14 @@ async def product_by_id(product_id: int, db: AsyncSession):
             )
 
         return product
+
+    except SQLAlchemyError:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch product."
+        )
+        
+   
 
     except SQLAlchemyError:
         raise HTTPException(
@@ -273,15 +276,17 @@ async def get_product_service(
                 or_(
                     Product.name.ilike(f"%{search}%"),
                     Product.slug.ilike(f"%{search}%"),
-                    Product.description.ilike(f"%{search}%"),  # এখানে ilike() হবে
+                    Product.description.ilike(f"%{search}%"),
                 )
             )
 
+        
         if category_id is not None:
             query = query.where(
                 Product.category_id == category_id
             )
 
+   
         if min_price is not None:
             query = query.where(
                 Product.price >= min_price
@@ -292,6 +297,8 @@ async def get_product_service(
                 Product.price <= max_price
             )
 
+
+      
         count_query = select(
             func.count()
         ).select_from(
@@ -300,33 +307,50 @@ async def get_product_service(
 
         total = await db.scalar(count_query)
 
+
+      
         if sort == "price_asc":
-            query = query.order_by(Product.price.asc())
+            query = query.order_by(
+                Product.price.asc()
+            )
 
         elif sort == "price_desc":
-            query = query.order_by(Product.price.desc())
+            query = query.order_by(
+                Product.price.desc()
+            )
 
         elif sort == "oldest":
-            query = query.order_by(Product.created_at.asc())
+            query = query.order_by(
+                Product.created_at.asc()
+            )
 
         elif sort == "name":
-            query = query.order_by(Product.name.asc())
+            query = query.order_by(
+                Product.name.asc()
+            )
 
         else:
-            query = query.order_by(Product.created_at.desc())
+            query = query.order_by(
+                Product.created_at.desc()
+            )
+
 
         query = query.options(
             selectinload(Product.category),
-            selectinload(Product.variants),
-            selectinload(Product.images),
+            selectinload(Product.variants)
+            .selectinload(ProductVariant.images)
         )
+
 
         offset = (page - 1) * limit
 
         query = query.offset(offset).limit(limit)
 
+
         result = await db.execute(query)
+
         products = result.scalars().all()
+
 
         return {
             "total": total,
@@ -335,13 +359,14 @@ async def get_product_service(
             "products": products,
         }
 
+
     except SQLAlchemyError:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to fetch products."
         )
 
-
+  
 
 async def put_product(
     product_id: int,
@@ -630,39 +655,41 @@ async def get_product_variants(
 
 
 ## Product Image 
-
-async def upload_product_images_service(
-    product_id: int, image: UploadFile, db: AsyncSession
+async def upload_variant_image_service(
+    variant_id: int,
+    image: UploadFile,
+    db: AsyncSession
 ):
 
-    
-    result = await db.execute(select(Product).where(Product.id == product_id))
-    product = result.scalar_one_or_none()
+    result = await db.execute(
+        select(ProductVariant)
+        .where(ProductVariant.id == variant_id)
+    )
 
-    if not product:
+    variant = result.scalar_one_or_none()
+
+    if not variant:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Product not found"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Variant not found"
         )
 
-  
     uploaded = await upload_image(image)
 
- 
     product_image = ProductImage(
-        product_id=product_id,
+        variant_id=variant_id,
         image_url=uploaded["image_url"],
         public_id=uploaded["public_id"],
     )
 
-   
     db.add(product_image)
+
     await db.commit()
     await db.refresh(product_image)
 
-    return product_image  
+    return product_image
 
 
- 
 
 async def delete_product_image(
     image_id: int,
@@ -670,23 +697,23 @@ async def delete_product_image(
 ):
 
     image = await db.scalar(
-        select(ProductImage).where(
-            ProductImage.id == image_id
-        )
+        select(ProductImage)
+        .where(ProductImage.id == image_id)
     )
 
     if image is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Image not found."
+            detail="Image not found"
         )
 
     try:
-        # Delete from Cloudinary
+        # Delete Cloudinary image
         await delete_image(image.public_id)
 
-        # Delete from Database
+        # Delete database record
         await db.delete(image)
+
         await db.commit()
 
         return {
@@ -706,17 +733,6 @@ async def delete_product_image(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to delete image from Cloudinary."
         )
-    
-
-
-            
-
-
-
-
-
-
-     
  
      
 

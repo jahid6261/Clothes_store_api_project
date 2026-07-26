@@ -13,7 +13,7 @@ from src.products.schemas import( CategorySchema,CategoryResponseSchema,Category
 from src.products.service import (create_category,all_category,category_by_id,update_category,
   patch_category,delete_category,bulk_delete_category,create_product,
 put_product,patch_product,delete_product,product_bulk_delete,create_product_variant,get_product_variants ,
-create_bulk_variant ,create_bulk_products ,upload_product_images_service ,get_product_service,
+create_bulk_variant ,create_bulk_products  ,get_product_service,upload_variant_image_service,
 product_by_id ,delete_product_image        
 )
 
@@ -187,17 +187,17 @@ async def  variant_bulk_crate_api(request:list[ProductVariantCreateSchema],db:As
 
 
 ## Iamge Routes 
-@products_router.post("/{product_id}/images", status_code=status.HTTP_201_CREATED)
-async def upload_product_images(
-    product_id: int,
-    
-    image:UploadFile = File(...),
-    db: AsyncSession = Depends(get_db),
+@products_router.post("/variants/{variant_id}/images")
+async def upload_variant_image(
+    variant_id: int,
+    image: UploadFile,
+    db: AsyncSession = Depends(get_db)
 ):
-    return await upload_product_images_service(
-       product_id, image,db
+    return await upload_variant_image_service(
+        variant_id,
+        image,
+        db
     )
-
 
 
 @products_router.delete("/images/{image_id}")
