@@ -8,6 +8,7 @@ from alembic import context
 from src.utils.db import DBModel
 from src.users.models import UserModel
 from src.products.models import Category,Product,ProductVariant ,ProductImage
+from src.orders.models import  Cart, CartItem
 
 from src.utils.settings import settings
 

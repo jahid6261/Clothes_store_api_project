@@ -2,7 +2,7 @@ from sqlalchemy import Column,Integer,String,Boolean,DateTime,Enum,func
 
 
 import enum
-
+from sqlalchemy.orm  import relationship
 from src.utils.db import DBModel
 
 class UserRole(enum.Enum):
@@ -32,5 +32,5 @@ class UserModel(DBModel):
     created_at=Column(DateTime(timezone=True),server_default=func.now()) 
     updated_at=Column(DateTime(timezone=True), server_default=func.now(),onupdate=func.now())
     
- 
-    
+    cart=relationship("Cart",back_populates="user")
+    orders=relationship("Order",back_populates="user")
