@@ -97,6 +97,18 @@ class ProductBulkDeleteSchema(BaseModel):
         examples=[[1, 2, 3]]
     )
 
+class ProductBulkResponseSchema(BaseModel):
+    id: int
+    name: str
+    slug: str
+    description: str
+    price: Decimal
+    is_available: bool
+    category_id: int
+
+    model_config = ConfigDict(
+        from_attributes=True
+    )
 
 class ProductResponseSchema(BaseModel):
     id: int
@@ -128,7 +140,17 @@ class ProductVariantCreateSchema(BaseModel):
     color: str
     stock: int
     sku: str
+class ProductVariantBulkResponseSchema(BaseModel):
+    id: int
+    product_id: int
+    size: str
+    color: str
+    stock: int
+    sku: str
 
+    model_config = ConfigDict(
+        from_attributes=True
+    )
 
 class ProductVariantResponseSchema(BaseModel):
     id: int

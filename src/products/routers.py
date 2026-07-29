@@ -6,7 +6,8 @@ from src.utils.db import get_db
 from src.products.schemas import( CategorySchema,CategoryResponseSchema,CategoryUpdateSchema,CategoryPatchSchema,
                                  CategoryBulkDeleteSchema,ProductSchema,ProductResponseSchema,ProductPatchSchema,
                                  ProductPutSchema,ProductBulkDeleteSchema, ProductVariantCreateSchema,ProductVariantResponseSchema,
-                                 ProductImageResponseSchema ,ProductListResponseSchema
+                                 ProductImageResponseSchema ,ProductListResponseSchema,ProductBulkResponseSchema,
+                                 ProductVariantBulkResponseSchema
 
 )
 
@@ -76,7 +77,7 @@ async def  product_create(request:ProductSchema,db:AsyncSession=Depends(get_db))
 
 @products_router.post(
     "/bulk",
-    response_model=list[ProductResponseSchema]
+    response_model=list[ProductBulkResponseSchema]
    
 )
 async def create_bulk_products_api(
@@ -177,7 +178,7 @@ async def get_product_variants_api(
     return await get_product_variants(product_id, db)
 
 
-@products_router.post("/variants/bulk",response_model=list[ProductVariantResponseSchema])
+@products_router.post("/variants/bulk",response_model=list[ProductVariantBulkResponseSchema])
 
 async def  variant_bulk_crate_api(request:list[ProductVariantCreateSchema],db:AsyncSession=Depends(get_db)):
 

@@ -190,34 +190,40 @@ async def create_product (request:ProductSchema,db:AsyncSession):
     
     return new_product
 
-async def create_bulk_products(request:list[ProductSchema],db:AsyncSession):
+async def create_bulk_products(
+    request: list[ProductSchema],
+    db: AsyncSession
+):
 
-    products=[Product(**item.model_dump())
-             for item in request
-             
+    products = [
+        Product(**item.model_dump())
+        for item in request
     ]
 
     db.add_all(products)
 
     try:
-        await db.commit(products)
+        await db.commit()
 
-        for product in products :
+        for product in products:
             await db.refresh(product)
-        return product
-    except IntegrityError :
+
+        return products
+
+    except IntegrityError:
         await db.rollback()
 
         raise HTTPException(
             status_code=400,
-            detail="Deplicate slug"
-        )    
-    
-    except SQLAlchemyError :
+            detail="Duplicate slug"
+        )
+
+    except SQLAlchemyError:
         await db.rollback()
+
         raise HTTPException(
             status_code=500,
-            detail="Failed to crate Products"
+            detail="Failed to create products"
         )
 
 async def product_by_id(product_id: int, db: AsyncSession):

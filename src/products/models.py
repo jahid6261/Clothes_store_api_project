@@ -55,12 +55,12 @@ class Product(DBModel):
         "CartItem",
         back_populates="product"
     )
-
     order_items = relationship(
-        "OrderItem",
-        back_populates="product"
-    )
+    "OrderItem",
+    back_populates="product"
+)
 
+  
 
 class ProductVariant(DBModel):
 
@@ -87,18 +87,20 @@ class ProductVariant(DBModel):
     images = relationship(
         "ProductImage",
         back_populates="variant",
-        cascade="all, delete-orphan"
+        cascade="all, delete-orphan",
+         lazy="selectin"
     )
 
     cart_items = relationship(
         "CartItem",
         back_populates="variant"
     )
-
     order_items = relationship(
-        "OrderItem",
-        back_populates="variant"
-    )
+    "OrderItem",
+    back_populates="variant"
+)
+
+ 
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())

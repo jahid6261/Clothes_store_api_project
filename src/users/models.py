@@ -33,3 +33,8 @@ class UserModel(DBModel):
     updated_at=Column(DateTime(timezone=True), server_default=func.now(),onupdate=func.now())
     
     cart=relationship("Cart",back_populates="user")
+    orders = relationship(
+    "Order",
+    back_populates="user",
+    cascade="all, delete-orphan"
+)
