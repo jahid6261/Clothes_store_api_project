@@ -38,6 +38,11 @@ class Settings(BaseSettings):
     SSLCOMMERZ_FAIL_URL: str
     SSLCOMMERZ_CANCEL_URL: str
 
+    ## admin 
+    ADMIN_EMAIL: str
+    ADMIN_PASSWORD: str
+    
+
 
 settings=Settings()
 

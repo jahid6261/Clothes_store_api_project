@@ -21,6 +21,7 @@ product_by_id ,delete_product_image
 from typing import List,Annotated
 
 from decimal import Decimal
+from src.depends.admin_check import get_current_admin
 products_router=APIRouter(prefix="/products",tags=[" Products"])
 
 
@@ -28,7 +29,7 @@ products_router=APIRouter(prefix="/products",tags=[" Products"])
 # all Category  Routes 
 @products_router.post("/categories",response_model=CategoryResponseSchema)
 
-async def create_categories(request:CategorySchema,db:AsyncSession=Depends(get_db)):
+async def create_categories(request:CategorySchema,db:AsyncSession=Depends(get_db),user=Depends(get_current_admin)):
 
     return await create_category(request,db)
 
@@ -44,23 +45,27 @@ async def categorirs_by_id(category_id:int,db:AssertionError=Depends(get_db)):
 
 @products_router.put("/categories/{category_id}",response_model=CategoryResponseSchema)
 
-async def update_categories(category_id:int,request:CategoryUpdateSchema,db:AsyncSession=Depends(get_db)):
+async def update_categories(category_id:int,request:CategoryUpdateSchema,db:AsyncSession=Depends(get_db),
+                            user=Depends(get_current_admin)):
     return await update_category(category_id,request,db)
 
 @products_router.patch("/categories/{category_id}",response_model=CategoryResponseSchema)
 
-async def pathc_categories(category_id:int, request:CategoryPatchSchema,db:AsyncSession=Depends(get_db)):
+async def pathc_categories(category_id:int, request:CategoryPatchSchema,db:AsyncSession=Depends(get_db),
+                user=Depends(get_current_admin)):
     return await patch_category(category_id,request,db)
 
 
 @products_router.delete("/categories/{category_id}")
 
-async def delete_categories(category_id:int,db:AsyncSession=Depends(get_db)):
+async def delete_categories(category_id:int,db:AsyncSession=Depends(get_db),
+                            user=Depends(get_current_admin)):
     return await  delete_category(category_id,db)
 
 
 @products_router.delete("/categories")
-async def bulk_delete_categories(request:CategoryBulkDeleteSchema,db:AsyncSession=Depends(get_db)):
+async def bulk_delete_categories(request:CategoryBulkDeleteSchema,db:AsyncSession=Depends(get_db),
+                                 user=Depends(get_current_admin)):
 
     return await bulk_delete_category(request,db)
 
@@ -71,7 +76,8 @@ async def bulk_delete_categories(request:CategoryBulkDeleteSchema,db:AsyncSessio
 
 @products_router.post("/",response_model=ProductResponseSchema)
 
-async def  product_create(request:ProductSchema,db:AsyncSession=Depends(get_db)):
+async def  product_create(request:ProductSchema,db:AsyncSession=Depends(get_db),
+                          user=Depends(get_current_admin)):
     return await create_product(request,db)
 
 
@@ -83,6 +89,7 @@ async def  product_create(request:ProductSchema,db:AsyncSession=Depends(get_db))
 async def create_bulk_products_api(
     request: list[ProductSchema],
     db: AsyncSession = Depends(get_db),
+    user=Depends(get_current_admin )
 ):
     
     return await create_bulk_products(request, db)
@@ -132,7 +139,8 @@ async def product_get(
   
 @products_router.put("/products_id",response_model=ProductPutSchema)
 
-async def product_put(product_id:int,request:ProductPutSchema,db:AsyncSession=Depends(get_db)):
+async def product_put(product_id:int,request:ProductPutSchema,db:AsyncSession=Depends(get_db),
+                    user=Depends(get_current_admin)):
 
     return await put_product(product_id,request,db)
 
@@ -143,18 +151,21 @@ async def product_put(product_id:int,request:ProductPutSchema,db:AsyncSession=De
     response_model=ProductResponseSchema,
     summary="Patch Product",
 )
-async def product_patch(product_id:int,request:ProductPatchSchema,db:AsyncSession=Depends(get_db)):
+async def product_patch(product_id:int,request:ProductPatchSchema,db:AsyncSession=Depends(get_db),
+                    user=Depends(get_current_admin)):
 
     return await patch_product(product_id,request,db)
 
 @products_router.delete("/{product_id}")
 
-async def product_delete(product_id:int,db:AsyncSession=Depends(get_db)):
+async def product_delete(product_id:int,db:AsyncSession=Depends(get_db),
+                        user=Depends(get_current_admin)):
     return await delete_product(product_id,db)
 
 @products_router.delete("/")
 
-async def bulk_product_delete(request:ProductBulkDeleteSchema,db:AsyncSession=Depends(get_db)):
+async def bulk_product_delete(request:ProductBulkDeleteSchema,db:AsyncSession=Depends(get_db),
+                             user=Depends(get_current_admin)):
 
     return await product_bulk_delete(request,db)
 
@@ -163,7 +174,8 @@ async def bulk_product_delete(request:ProductBulkDeleteSchema,db:AsyncSession=De
 
 @products_router.post("variants",response_model=ProductVariantResponseSchema)
 
-async def product_variant_create(request:ProductVariantCreateSchema,db:AsyncSession=Depends(get_db)):
+async def product_variant_create(request:ProductVariantCreateSchema,db:AsyncSession=Depends(get_db),
+                                user=Depends(get_current_admin)):
     return await create_product_variant(request,db)
 
 
@@ -174,13 +186,15 @@ async def product_variant_create(request:ProductVariantCreateSchema,db:AsyncSess
 async def get_product_variants_api(
     product_id: int,
     db: AsyncSession = Depends(get_db),
+    user=Depends(get_current_admin)
 ):
     return await get_product_variants(product_id, db)
 
 
 @products_router.post("/variants/bulk",response_model=list[ProductVariantBulkResponseSchema])
 
-async def  variant_bulk_crate_api(request:list[ProductVariantCreateSchema],db:AsyncSession=Depends(get_db)):
+async def  variant_bulk_crate_api(request:list[ProductVariantCreateSchema],db:AsyncSession=Depends(get_db),
+                                 user=Depends(get_current_admin)):
 
     return await create_bulk_variant(request,db)
 
@@ -192,7 +206,8 @@ async def  variant_bulk_crate_api(request:list[ProductVariantCreateSchema],db:As
 async def upload_variant_image(
     variant_id: int,
     image: UploadFile,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    user=Depends(get_current_admin)
 ):
     return await upload_variant_image_service(
         variant_id,
@@ -205,6 +220,7 @@ async def upload_variant_image(
 async def delete_image_router(
     image_id: int,
     db: AsyncSession = Depends(get_db),
+    user=Depends(get_current_admin)
 ):
     return await delete_product_image(image_id, db)
 
