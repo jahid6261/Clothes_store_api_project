@@ -7,7 +7,7 @@ from src.products.schemas import( CategorySchema,CategoryResponseSchema,Category
                                  CategoryBulkDeleteSchema,ProductSchema,ProductResponseSchema,ProductPatchSchema,
                                  ProductPutSchema,ProductBulkDeleteSchema, ProductVariantCreateSchema,ProductVariantResponseSchema,
                                  ProductImageResponseSchema ,ProductListResponseSchema,ProductBulkResponseSchema,
-                                 ProductVariantBulkResponseSchema
+                                 ProductVariantBulkResponseSchema,ReviewResponseSchema,CreateReviewRequest
 
 )
 
@@ -15,13 +15,14 @@ from src.products.service import (create_category,all_category,category_by_id,up
   patch_category,delete_category,bulk_delete_category,create_product,
 put_product,patch_product,delete_product,product_bulk_delete,create_product_variant,get_product_variants ,
 create_bulk_variant ,create_bulk_products  ,get_product_service,upload_variant_image_service,
-product_by_id ,delete_product_image        
+product_by_id ,delete_product_image  ,create_review      
 )
 
 from typing import List,Annotated
 
 from decimal import Decimal
 from src.depends.admin_check import get_current_admin
+from src.depends.auth_depends import get_current_user
 products_router=APIRouter(prefix="/products",tags=[" Products"])
 
 
@@ -224,3 +225,16 @@ async def delete_image_router(
 ):
     return await delete_product_image(image_id, db)
 
+
+@products_router.post("/reviews",response_model=ReviewResponseSchema)
+
+async def create_review_api(
+    request: CreateReviewRequest,
+    db: AsyncSession = Depends(get_db),
+    user = Depends(get_current_user)
+):
+    return await create_review(
+        request,
+        user.id,
+        db
+    )

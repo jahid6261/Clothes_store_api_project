@@ -1,8 +1,8 @@
 
-from src.products.models import Category,Product,ProductVariant,ProductImage
+from src.products.models import Category,Product,ProductVariant,ProductImage,Review
 from src.products.schemas import (CategorySchema,CategoryResponseSchema,CategoryUpdateSchema,CategoryPatchSchema,
 CategoryBulkDeleteSchema,ProductSchema,ProductResponseSchema,ProductPutSchema,
-ProductPatchSchema,ProductVariantCreateSchema,ProductVariantResponseSchema,ProductBulkDeleteSchema
+ProductPatchSchema,ProductVariantCreateSchema,ProductVariantResponseSchema,ProductBulkDeleteSchema,CreateReviewRequest
 
                                   )
 from sqlalchemy import select,delete, and_, or_,    asc,   desc, func
@@ -18,7 +18,7 @@ from sqlalchemy.orm import selectinload
 from src.utils.cloudinary import upload_image ,delete_image
 from typing import List,Optional
 from sqlalchemy.exc import  IntegrityError,SQLAlchemyError
-
+from src.orders.models import Order,OrderStatus,OrderItem
 
 async def create_category(request:CategorySchema,db:AsyncSession):
 
@@ -739,7 +739,67 @@ async def delete_product_image(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to delete image from Cloudinary."
         )
- 
+async def create_review(
+    request: CreateReviewRequest,
+    user_id: int,
+    db: AsyncSession,
+):
+    # Check product exists
+    product = await db.get(Product, request.product_id)
+
+    if not product:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Product not found."
+        )
+
+    result = await db.execute(
+        select(Order)
+        .join(OrderItem, Order.id == OrderItem.order_id)
+        .where(
+            Order.user_id == user_id,
+            Order.status == OrderStatus.DELIVERED,
+            OrderItem.product_id == request.product_id,
+        )
+    )
+
+    order = result.scalars().first()
+
+    if not order:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="You can only review products you have purchased and received."
+        )
+
+    # Check duplicate review
+    result = await db.execute(
+        select(Review).where(
+            Review.user_id == user_id,
+            Review.product_id == request.product_id,
+            Review.order_id == order.id,
+        )
+    )
+
+    if result.scalars().first():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="You have already reviewed this product."
+        )
+
+    # Create review
+    review = Review(
+        user_id=user_id,
+        product_id=request.product_id,
+        order_id=order.id,
+        rating=request.rating,
+        comment=request.comment,
+    )
+
+    db.add(review)
+    await db.commit()
+    await db.refresh(review)
+
+    return review
      
 
 

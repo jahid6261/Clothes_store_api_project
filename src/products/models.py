@@ -60,6 +60,8 @@ class Product(DBModel):
     back_populates="product"
 )
 
+    reviews=relationship("Review",back_populates="product",cascade="all,delete-orphan")
+
   
 
 class ProductVariant(DBModel):
@@ -125,3 +127,21 @@ class ProductImage(DBModel):
         "ProductVariant",
         back_populates="images"
     )
+
+
+class Review(DBModel):
+
+    __tablename__ = "reviews"
+    id=Column(Integer,primary_key=True,index=True)
+    user_id=Column(Integer,ForeignKey("users.id",ondelete="CASCADE"),nullable=False)  
+    product_id=Column(Integer,ForeignKey("products.id",ondelete="CASCADE"),nullable=False)
+    order_id=Column(Integer,ForeignKey("orders.id",ondelete="CASCADE"),nullable=False)
+    rating=Column(Integer,nullable=False)
+    comment=Column(Text,nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    user=relationship("UserModel",back_populates="reviews")
+    product=relationship("Product",back_populates="reviews")
+    order=relationship("Order",back_populates="reviews")
+    

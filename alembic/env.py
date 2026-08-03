@@ -7,7 +7,7 @@ from alembic import context
 
 from src.utils.db import DBModel
 from src.users.models import UserModel
-from src.products.models import Category,Product,ProductVariant ,ProductImage
+from src.products.models import Category,Product,ProductVariant ,ProductImage,Review
 from src.orders.models import  Cart, CartItem,Order,OrderItem,OrderStatus
 
 from src.utils.settings import settings

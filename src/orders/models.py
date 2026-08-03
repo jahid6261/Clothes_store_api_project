@@ -79,7 +79,7 @@ class Order(DBModel):
 
     user = relationship("UserModel", back_populates="orders")
     order_items = relationship("OrderItem", back_populates="order", cascade="all, delete-orphan")
-
+    reviews=relationship("Review",back_populates="order",cascade="all,delete-orphan") 
 
 class OrderItem(DBModel):
     __tablename__ = "order_items"
