@@ -279,8 +279,9 @@ docker compose up -d
 ---
 
 # 📂 Project Structure
+```text
 Clothes_store_api_project/
-
+│
 ├── main.py
 ├── docker-compose.yml
 ├── Dockerfile
@@ -337,15 +338,13 @@ Clothes_store_api_project/
 │   ├── seed/
 │   │
 │   └── utils/
-│       ├── cloudinary.py
-│       ├── security.py
-│       └── settings.py
 │
 ├── alembic/
 │   ├── env.py
 │   └── versions/
 │
 └── README.md
+```
 
 
 
