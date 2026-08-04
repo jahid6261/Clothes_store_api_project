@@ -15,12 +15,9 @@ class Category(DBModel):
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    products = relationship("Product", back_populates="category", cascade="all, delete-orphan")
 
-    products = relationship(
-        "Product",
-        back_populates="category",
-        cascade="all, delete-orphan"
-    )
+ 
 
 
 class Product(DBModel):
@@ -33,15 +30,15 @@ class Product(DBModel):
     description = Column(Text, nullable=False)
     is_available = Column(Boolean, default=True)
     price = Column(Numeric(10, 2), nullable=False)
+    category_id = Column(Integer, ForeignKey("categories.id", ondelete="CASCADE"), nullable=False)
 
-    category_id = Column(
-        Integer,
-        ForeignKey("categories.id", ondelete="CASCADE"),
-        nullable=False
-    )
-
+    
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+
+  
+
 
     category = relationship("Category", back_populates="products")
 
@@ -55,6 +52,7 @@ class Product(DBModel):
         "CartItem",
         back_populates="product"
     )
+
     order_items = relationship(
     "OrderItem",
     back_populates="product"
@@ -69,13 +67,8 @@ class ProductVariant(DBModel):
     __tablename__ = "product_variants"
 
     id = Column(Integer, primary_key=True, index=True)
-
-    product_id = Column(
-        Integer,
-        ForeignKey("products.id", ondelete="CASCADE"),
-        nullable=False
-    )
-
+    product_id = Column(Integer, ForeignKey("products.id", ondelete="CASCADE"), nullable=False)
+    
     size = Column(String(50), nullable=False)
     color = Column(String(50), nullable=False)
     stock = Column(Integer, nullable=False, default=0)
@@ -102,11 +95,15 @@ class ProductVariant(DBModel):
     back_populates="variant"
 )
 
- 
-
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    
+  
 
+
+ 
+
+ 
 
 class ProductImage(DBModel):
 

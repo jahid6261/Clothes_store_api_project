@@ -12,16 +12,16 @@ from src.payments.service import (create_payment_service,payment_success_service
 )
 
 
-payment_router = APIRouter(
-    prefix="/payment",
-    tags=["Payment"]
-)
+payment_router = APIRouter(prefix="/payment", tags=["Payment"])
+    
+   
 
 
-@payment_router.post(
-    "/create",
-    response_model=PaymentResponseSchema
-)
+
+@payment_router.post("/create",response_model=PaymentResponseSchema)
+    
+    
+
 async def create_payment(
     request: PaymentRequestSchema,
     db: AsyncSession = Depends(get_db),
@@ -33,17 +33,10 @@ async def create_payment(
     )
 
 
-payment_router = APIRouter(
-    prefix="/payment",
-    tags=["Payment"]
-)
-
-
-
-@payment_router.post(
-    "/create",
-    response_model=PaymentResponseSchema
-)
+payment_router = APIRouter( prefix="/payment",tags=["Payment"])
+   
+    
+@payment_router.post(  "/create",response_model=PaymentResponseSchema)
 async def create_payment(
     request: PaymentRequestSchema,
     db: AsyncSession = Depends(get_db),
@@ -53,8 +46,6 @@ async def create_payment(
         request=request,
         db=db
     )
-
-
 
 @payment_router.post("/success")
 async def payment_success(
@@ -77,6 +68,7 @@ async def payment_success(
     )
 
 
+
 @payment_router.post("/cancel")
 async def payment_cancel(
     request: PaymentSuccessSchema,
@@ -88,6 +80,7 @@ async def payment_cancel(
         db=db
     )
 
+ 
 @payment_router.post("/fail")
 async def payment_fail(
     request: PaymentSuccessSchema,
@@ -97,4 +90,11 @@ async def payment_fail(
     return await payment_fail_service(
         request=request,
         db=db
-    )
+    ) 
+
+    
+
+
+
+
+

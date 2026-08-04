@@ -16,3 +16,4 @@ celery
 cloudinary
 python-multipart
 requests
+ollama

@@ -3,9 +3,9 @@ from decimal import Decimal
 from typing import Optional
 from datetime import datetime
 from src.orders.models import OrderStatus
-# -----------------------------
-# Product Response in Cart
-# -----------------------------
+
+
+
 
 class CartProductResponseSchema(BaseModel):
     id: int
@@ -17,9 +17,7 @@ class CartProductResponseSchema(BaseModel):
     )
 
 
-# -----------------------------
-# Image Response in Variant
-# -----------------------------
+
 
 class CartImageResponseSchema(BaseModel):
     id: int
@@ -31,9 +29,7 @@ class CartImageResponseSchema(BaseModel):
     )
 
 
-# -----------------------------
-# Variant Response in Cart
-# -----------------------------
+
 
 class CartVariantResponseSchema(BaseModel):
     id: int
@@ -50,9 +46,7 @@ class CartVariantResponseSchema(BaseModel):
     )
 
 
-# -----------------------------
-# Add Cart Item
-# -----------------------------
+
 
 class CartItemCreateSchema(BaseModel):
     product_id: int
@@ -63,9 +57,7 @@ class CartItemCreateSchema(BaseModel):
     )
 
 
-# -----------------------------
-# Update Quantity
-# -----------------------------
+
 
 class CartItemUpdateSchema(BaseModel):
     quantity: int = Field(
@@ -74,9 +66,7 @@ class CartItemUpdateSchema(BaseModel):
     )
 
 
-# -----------------------------
-# Cart Item Response
-# -----------------------------
+
 
 class CartItemResponseSchema(BaseModel):
     id: int
@@ -92,9 +82,7 @@ class CartItemResponseSchema(BaseModel):
     )
 
 
-# -----------------------------
-# Cart Response
-# -----------------------------
+
 
 class CartResponseSchema(BaseModel):
     id: int

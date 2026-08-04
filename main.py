@@ -8,7 +8,7 @@ from fastapi.responses import JSONResponse
 from src.orders.routers import cart_router,order_router
 from src.payments.routers import payment_router
 from src.admin.routers import admin_router
-
+from src.ai.routers import ai_router
 app = FastAPI()
 
 app.include_router(user_router)
@@ -17,6 +17,7 @@ app.include_router(cart_router)
 app.include_router(order_router)
 app.include_router(payment_router)
 app.include_router(admin_router)
+app.include_router(ai_router)
 
 
 logging.basicConfig(level=logging.INFO)

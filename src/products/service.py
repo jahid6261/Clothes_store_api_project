@@ -226,6 +226,20 @@ async def create_bulk_products(
             detail="Failed to create products"
         )
 
+async def get_products_for_ai(db: AsyncSession):
+    query= (
+        select(Product)
+        .where(Product.is_available.is_(True))
+        .options(
+            selectinload(Product.category),
+            selectinload(Product.variants)
+        )
+    )
+
+    result = await db.execute(query)
+
+    return result.scalars().unique().all()
+
 async def product_by_id(product_id: int, db: AsyncSession):
 
     try:
