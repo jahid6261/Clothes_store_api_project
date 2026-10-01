@@ -1,177 +1,98 @@
 # 🛒 Clothing Store API
 
-A complete **e-commerce backend API** for a clothing store built with **FastAPI, PostgreSQL, Docker, Celery, RabbitMQ, Cloudinary, SSLCommerz Payment Gateway, and AI integration using Ollama Phi-3**.
+A production-style **e-commerce backend API** for a clothing store built with **FastAPI, PostgreSQL, Docker, Celery, RabbitMQ, Cloudinary, SSLCommerz, and AI/RAG integration**.
 
-The system provides complete online shopping functionality including authentication, product management, cart, checkout, order processing, payment, reviews, admin dashboard, email verification, background task processing, and an AI shopping assistant.
+The API provides authentication, product and variant management, cart, checkout, orders, payments, reviews, admin dashboard, email automation, and an AI-powered shopping assistant.
 
 ---
 
-# 🚀 Features
+## 🚀 Key Features
 
-## 🔐 Authentication System
+### 🔐 Authentication & Security
 
-* User registration
-* JWT authentication
-* User login
+* User registration and JWT authentication
+* Email verification and account activation
 * User profile management
-* Email verification after registration
-* Account activation using verification token
+* Forgot password with OTP
+* Password reset using OTP with expiry
+* Secure password hashing
+* Role-based access control
 
----
-
-# 👕 Product Management
+### 👕 Product Management
 
 * Category CRUD
 * Product CRUD
-* Product variants management
-* Size and color management
-* Stock management
-* Product image upload
+* Product variants
+* Size, color and stock management
+* Cloudinary image upload
 * Product filtering and pagination
-* Bulk product creation
-* Bulk product deletion
+* Bulk product creation and deletion
 
-### Cloudinary Integration
+### 🛒 Cart & Orders
 
-Cloudinary is used for product image management.
+* Add/update/remove cart items
+* Cart checkout summary
+* Order creation and management
+* User order history
+* Order cancellation
+* Admin order status management
+* Automatic stock management
 
-Features:
-
-* Upload product variant images
-* Store image URLs securely
-* Delete product images
-* Cloud-based image storage
-
----
-
-# 🛒 Cart & Checkout System
-
-Features:
-
-* Add product to cart
-* Update cart item quantity
-* Remove cart items
-* Clear cart
-* Checkout summary generation
-
----
-
-# 📦 Order Management
-
-Features:
-
-* Create orders
-* View user orders
-* Order details
-* Cancel orders
-* Admin order management
-* Update order status
-
----
-
-# 💳 Payment Integration
+### 💳 Payment
 
 Integrated with **SSLCommerz Payment Gateway**.
 
 Payment flow:
 
-1. User creates order
-2. Payment session is generated
-3. Customer completes payment
-4. Payment callback is received
-5. Order status is updated
-6. Confirmation email is sent
+```text
+Create Order
+     ↓
+Create Payment Session
+     ↓
+SSLCommerz
+     ↓
+Success / Fail / Cancel
+     ↓
+Update Order
+     ↓
+Send Confirmation Email
+```
 
-Features:
+### ⭐ Review System
 
-* Create payment session
-* Payment success handling
-* Payment failure handling
-* Payment cancellation handling
-
----
-
-# ⭐ Review System
-
-Features:
-
-* Product rating system
-* Product Comment system
+* Product ratings and comments
 * Review validation
-* Only completed orders can submit reviews
+* Reviews restricted to completed purchases
 
----
+### 👨‍💼 Admin Dashboard
 
-# 👨‍💼 Admin Dashboard
-
-Features:
-
-* Admin authentication
-* Dashboard statistics
-* Total users count
-* Total products count
-* Total orders count
+* User statistics
+* Product statistics
+* Order statistics
 * Revenue calculation
 * Order management
-* Update order status
+* Order status updates
 
 ---
 
-# 📧 Email Verification & Notification System
+## 📧 Email & Background Tasks
 
-Implemented email automation system.
-
-Email features:
-
-* Registration verification email
-* Account activation link
-* Order confirmation email after successful payment
-
-Email workflow:
-
-```
-User Registration
-        |
-        |
-Generate Activation Token
-        |
-        |
-Celery Task
-        |
-        |
-RabbitMQ Queue
-        |
-        |
-Send Email
-```
-
----
-
-# ⚡ Background Task Processing
-
-Implemented asynchronous task processing using:
-
-* Celery
-* RabbitMQ
+Email automation is implemented using **Celery + RabbitMQ**.
 
 Used for:
 
-* Sending verification emails
-* Sending order confirmation emails
-* Running background jobs without blocking API requests
+* Registration verification emails
+* Password reset OTP emails
+* Order confirmation emails
+* Background email processing
 
-Architecture:
-
-```
+```text
 FastAPI
-   |
-   |
-Celery Worker
-   |
-   |
+   ↓
+Celery
+   ↓
 RabbitMQ
-   |
-   |
+   ↓
 Email Service
 ```
 
@@ -179,251 +100,80 @@ Email Service
 
 # 🤖 AI Shopping Assistant
 
-Integrated AI chatbot using:
+The project includes an AI shopping assistant powered by:
 
-* Ollama
-* Phi-3 Language Model
-* Database-backed responses
+* **Ollama**
+* **Phi-3**
+* **Sentence Transformers**
+* **PostgreSQL + pgvector**
+* **RAG**
+* **Vector Embeddings**
 
-The AI assistant answers user questions using product data stored in PostgreSQL.
+The assistant uses product information stored in the database to answer shopping-related questions.
 
-Example:
+### RAG Pipeline
 
+```text
+User Query
+    ↓
+Generate Embedding
+    ↓
+pgvector Similarity Search
+    ↓
+Retrieve Relevant Product Chunks
+    ↓
+Product Context
+    ↓
+Ollama Phi-3
+    ↓
+AI Response
 ```
+
+### Example
+
+```text
 User:
-What is the price of Classic Cotton T-Shirt?
+Show me a cotton t-shirt under 1000 BDT.
 
 AI:
-According to the database, Classic Cotton T-Shirt price is 850.00 BDT.
+I found cotton t-shirts matching your price range...
 ```
 
-Future AI improvements:
+### Embedding
 
-* RAG pipeline
-* ChromaDB integration
-* FAISS vector search
-* Whisper voice assistant
-* AI recommendation system
+Product information is converted into vector embeddings using:
+
+```text
+sentence-transformers/all-MiniLM-L6-v2
+```
+
+The embeddings are stored in PostgreSQL using **pgvector** for semantic similarity search.
+
+This allows the AI assistant to understand queries beyond simple keyword matching.
 
 ---
 
-# 🐳 Docker Implementation
+# 🐳 Docker
 
-The entire application is containerized using Docker.
+The application is containerized using Docker Compose.
 
-Docker services:
+Main services:
 
-* FastAPI Backend
-* PostgreSQL Database
+* FastAPI
+* PostgreSQL
+* pgvector
 * PgAdmin
 * RabbitMQ
 * Celery Worker
 
-Benefits:
-
-* Easy setup
-* Environment consistency
-* Service isolation
-* Production-ready deployment
-
-Run project:
-
-```bash
-docker compose up -d
-```
-
----
-
-# 🛠️ Tech Stack
-
-## Backend
-
-* Python
-* FastAPI
-* SQLAlchemy Async
-* Alembic
-
-## Database
-
-* PostgreSQL
-
-## Authentication
-
-* JWT Authentication
-* Password Hashing
-
-## Storage
-
-* Cloudinary
-
-## Background Processing
-
-* Celery
-* RabbitMQ
-
-## Payment
-
-* SSLCommerz
-
-## AI
-
-* Ollama
-* Phi-3 Model
-
-## DevOps
-
-* Docker
-* Docker Compose
-* Git & GitHub
-
----
-
-# 📂 Project Structure
-```text
-Clothes_store_api_project/
-│
-├── main.py
-├── docker-compose.yml
-├── Dockerfile
-├── requirements.txt
-├── .env
-│
-├── src/
-│   │
-│   ├── users/
-│   │   ├── models.py
-│   │   ├── routers.py
-│   │   ├── schemas.py
-│   │   └── service.py
-│   │
-│   ├── products/
-│   │   ├── models.py
-│   │   ├── routers.py
-│   │   ├── schemas.py
-│   │   └── service.py
-│   │
-│   ├── orders/
-│   │   ├── models.py
-│   │   ├── routers.py
-│   │   ├── schemas.py
-│   │   └── service.py
-│   │
-│   ├── payments/
-│   │   ├── routers.py
-│   │   ├── schemas.py
-│   │   ├── service.py
-│   │   └── sslcommerz.py
-│   │
-│   ├── admin/
-│   │   ├── routers.py
-│   │   ├── schemas.py
-│   │   └── service.py
-│   │
-│   ├── ai/
-│   │   ├── models.py
-│   │   ├── routers.py
-│   │   ├── schemas.py
-│   │   ├── prompt.py
-│   │   └── service.py
-│   │
-│   ├── cart/
-│   │
-│   ├── core/
-│   │   ├── celery.py
-│   │   ├── email.py
-│   │   └── task.py
-│   │
-│   ├── depends/
-│   │
-│   ├── seed/
-│   │
-│   └── utils/
-│
-├── alembic/
-│   ├── env.py
-│   └── versions/
-│
-└── README.md
-```
-
-
-
-# ⚙️ Installation
-
-Clone repository:
-
-```bash
-git clone https://github.com/jahid6261/Clothes_store_api_project
-
-cd Clothes_store_api_project
-```
-
-Create `.env` file:
-
-```
-# Database
-DATABASE_URL=
-
-# Security
-SECRET_KEY=
-ALGORITHM=HS256
-
-
-# Email Configuration
-EMAIL_HOST=smtp.gmail.com
-EMAIL_PORT=587
-EMAIL_USER=
-EMAIL_PASSWORD=
-EMAIL_FROM=
-
-
-# Celery / RabbitMQ
-CELERY_BROKER_URL=
-
-# Base URL
-BASE_URL=http://localhost:8001
-
-
-# Cloudinary Configuration
-CLOUDINARY_CLOUD_NAME=
-CLOUDINARY_API_KEY=
-CLOUDINARY_API_SECRET=
-
-
-# SSLCommerz Payment Gateway
-SSLCOMMERZ_STORE_ID=
-SSLCOMMERZ_STORE_PASSWORD=
-
-SSLCOMMERZ_PAYMENT_URL=
-SSLCOMMERZ_VALIDATION_URL=
-
-SSLCOMMERZ_SUCCESS_URL=
-SSLCOMMERZ_FAIL_URL=
-SSLCOMMERZ_CANCEL_URL=
-
-
-# Admin Account
-ADMIN_EMAIL=
-ADMIN_PASSWORD=
-```
-
----
-
-# 🐳 Run With Docker
-
-Build:
-
-```bash
-docker compose build
-```
-
 Run:
 
 ```bash
+docker compose build
 docker compose up -d
 ```
 
-Check containers:
+Check services:
 
 ```bash
 docker compose ps
@@ -431,9 +181,108 @@ docker compose ps
 
 ---
 
-# 🗄️ Database Migration
+# 🛠️ Tech Stack
 
-Run migration:
+### Backend
+
+* Python
+* FastAPI
+* SQLAlchemy Async
+* Alembic
+
+### Database
+
+* PostgreSQL
+* pgvector
+
+### Authentication
+
+* JWT
+* Password Hashing
+* OTP Password Reset
+
+### Storage
+
+* Cloudinary
+
+### Background Processing
+
+* Celery
+* RabbitMQ
+
+### Payment
+
+* SSLCommerz
+
+### AI / RAG
+
+* Ollama
+* Phi-3
+* Sentence Transformers
+* Vector Embeddings
+* pgvector
+* RAG
+
+### DevOps
+
+* Docker
+* Docker Compose
+* Git
+* GitHub
+
+
+
+# ⚙️ Installation
+
+Clone the repository:
+
+```bash
+git clone https://github.com/jahid6261/Clothes_store_api_project.git
+
+cd Clothes_store_api_project
+```
+
+Create a `.env` file and configure:
+
+```env
+DATABASE_URL=
+
+SECRET_KEY=
+ALGORITHM=HS256
+
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USER=
+EMAIL_PASSWORD=
+EMAIL_FROM=
+
+CELERY_BROKER_URL=
+
+BASE_URL=http://localhost:8001
+
+CLOUDINARY_CLOUD_NAME=
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
+
+SSLCOMMERZ_STORE_ID=
+SSLCOMMERZ_STORE_PASSWORD=
+SSLCOMMERZ_PAYMENT_URL=
+SSLCOMMERZ_VALIDATION_URL=
+SSLCOMMERZ_SUCCESS_URL=
+SSLCOMMERZ_FAIL_URL=
+SSLCOMMERZ_CANCEL_URL=
+
+ADMIN_EMAIL=
+ADMIN_PASSWORD=
+```
+
+Run Docker:
+
+```bash
+docker compose up -d
+```
+
+Run migrations:
 
 ```bash
 docker compose exec web alembic upgrade head
@@ -443,13 +292,13 @@ docker compose exec web alembic upgrade head
 
 # 🤖 Ollama Setup
 
-Install Phi-3 model:
+Install Ollama and pull the Phi-3 model:
 
 ```bash
 ollama pull phi3
 ```
 
-Run Ollama:
+Start Ollama:
 
 ```bash
 ollama serve
@@ -457,15 +306,15 @@ ollama serve
 
 AI endpoint:
 
-```
+```http
 POST /ai/chat
 ```
 
-Request:
+Example request:
 
 ```json
 {
-  "prompt": "What products are available?"
+  "prompt": "Show me available cotton t-shirts."
 }
 ```
 
@@ -475,99 +324,21 @@ Request:
 
 Swagger UI:
 
-```
+```text
 http://localhost:8001/docs
 ```
 
----
 
-# 🔗 API Modules
 
-## Authentication
 
-```
-POST   /users/register
-POST   /users/login
-GET    /users/profile
-GET    /users/activate/{token}
-```
-
-## Products
-
-```
-GET    /products/
-POST   /products/
-GET    /products/{product_id}
-POST   /products/categories
-POST   /productsvariants
-```
-
-## Cart
-
-```
-POST   /cart/items
-GET    /cart
-POST   /cart/checkout
-```
-
-## Orders
-
-```
-POST   /orders/create
-GET    /orders
-GET    /orders/{order_id}
-```
-
-## Payment
-
-```
-POST   /payment/create
-POST   /payment/success
-POST   /payment/cancel
-POST   /payment/fail
-```
-
-## Admin
-
-```
-GET    /admin/dashboard
-GET    /admin/orders
-PATCH  /admin/orders/{order_id}/status
-```
-
-## AI
-
-```
-POST   /ai/chat
-```
-
----
-
-# 🌱 Future Improvements
-
-* RAG based product search
-* Vector database integration
-* ChromaDB
-* FAISS
-* Whisper speech recognition
-* AI product recommendation
-* Chat history memory
-
----
 
 # 👨‍💻 Author
 
 **Jahid Alam**
 
-Backend Developer
+Python Backend Developer
 
-Skills:
-
-* FastAPI
-* PostgreSQL
-* Docker
-* AI Integration
+**Tech:** FastAPI • PostgreSQL • Docker • Celery • RabbitMQ • AI/RAG
 
 GitHub:
-
 https://github.com/jahid6261
