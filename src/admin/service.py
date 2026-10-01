@@ -8,7 +8,6 @@ from src.products.models import Category,Product
 from src.users.models import UserModel
 from src.admin.schemas import UpdateOrderStatusRequest
 
-
 async def get_all_orders(db: AsyncSession):
     result = await db.execute(
         select(Order)
@@ -19,7 +18,40 @@ async def get_all_orders(db: AsyncSession):
         .order_by(Order.created_at.desc())
     )
 
-    return result.scalars().all()
+    orders = result.scalars().all()
+
+    return [
+        {
+            "id": order.id,
+            "first_name": order.user.first_name,
+            "last_name": order.user.last_name,
+            "email": order.user.email,
+            "phone": order.phone,
+
+            "address": order.address,
+            "city": order.city,
+            "postal_code": order.postal_code,
+
+            "total_price": order.total_price,
+            "paid": order.paid,
+            "transaction_id": order.transaction_id,
+            "status": order.status,
+            "created_at": order.created_at,
+
+            "order_items": [
+                {
+                    "id": item.id,
+                    "product_id": item.product_id,
+                    "variant_id": item.variant_id,
+                    "price": item.price,
+                    "quantity": item.quantity,
+                    "total_price": item.total_price,
+                }
+                for item in order.order_items
+            ],
+        }
+        for order in orders
+    ]
 
 
 async def get_order_by_id(order_id: int, db: AsyncSession):
@@ -40,7 +72,35 @@ async def get_order_by_id(order_id: int, db: AsyncSession):
             detail="Order not found",
         )
 
-    return order
+    return {
+        "id": order.id,
+        "first_name": order.user.first_name,
+        "last_name": order.user.last_name,
+        "email": order.user.email,
+        "phone": order.phone,
+
+        "address": order.address,
+        "city": order.city,
+        "postal_code": order.postal_code,
+
+        "total_price": order.total_price,
+        "paid": order.paid,
+        "transaction_id": order.transaction_id,
+        "status": order.status,
+        "created_at": order.created_at,
+
+        "order_items": [
+            {
+                "id": item.id,
+                "product_id": item.product_id,
+                "variant_id": item.variant_id,
+                "price": item.price,
+                "quantity": item.quantity,
+                "total_price": item.total_price,
+            }
+            for item in order.order_items
+        ],
+    }
 
 
 async def update_order_status(

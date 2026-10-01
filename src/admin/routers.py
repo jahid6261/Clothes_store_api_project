@@ -3,14 +3,20 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.depends.admin_check import get_current_admin
 from src.utils.db import get_db
-from src.admin.schemas import DashboardResponseSchema
+
+from src.admin.schemas import (
+    DashboardResponseSchema,
+    AdminOrderResponse,
+    UpdateOrderStatusRequest,
+)
+
 from src.admin.service import (
     get_dashboard,
     get_all_orders,
     get_order_by_id,
     update_order_status,
 )
-from src.admin.schemas import UpdateOrderStatusRequest
+
 
 admin_router = APIRouter(
     prefix="/admin",
@@ -31,22 +37,32 @@ async def dashboard(
     return await get_dashboard(db)
 
 
-# Orders
+# All Orders
 
-@admin_router.get("/orders")
-async def all_orders( db: AsyncSession = Depends(get_db)):
-   
-
+@admin_router.get(
+    "/orders",
+    response_model=list[AdminOrderResponse],
+)
+async def all_orders(
+    db: AsyncSession = Depends(get_db),
+):
     return await get_all_orders(db)
 
 
-@admin_router.get("/orders/{order_id}")
-async def single_order(order_id: int, db: AsyncSession = Depends(get_db)):
-    
-   
+# Single Order
 
+@admin_router.get(
+    "/orders/{order_id}",
+    response_model=AdminOrderResponse,
+)
+async def single_order(
+    order_id: int,
+    db: AsyncSession = Depends(get_db),
+):
     return await get_order_by_id(order_id, db)
 
+
+# Change Order Status
 
 @admin_router.patch("/orders/{order_id}/status")
 async def change_order_status(

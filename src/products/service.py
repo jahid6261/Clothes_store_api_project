@@ -19,7 +19,7 @@ from src.utils.cloudinary import upload_image ,delete_image
 from typing import List,Optional
 from sqlalchemy.exc import  IntegrityError,SQLAlchemyError
 from src.orders.models import Order,OrderStatus,OrderItem
-
+from src.ai.rag_service import sync_product_rag
 async def create_category(request:CategorySchema,db:AsyncSession):
 
     new_category=Category(
@@ -153,43 +153,55 @@ async def bulk_delete_category(request:CategoryBulkDeleteSchema,db:AsyncSession)
 
 
 ## Product  CRUD Operation start 
-
-
-async def create_product (request:ProductSchema,db:AsyncSession):
-    new_product=Product(
+async def create_product(
+    request: ProductSchema,
+    db: AsyncSession
+):
+    new_product = Product(
         name=request.name.strip(),
         slug=request.slug.strip(),
         description=request.description.strip(),
         price=request.price,
         category_id=request.category_id,
         is_available=request.is_available
-
-
     )
 
     db.add(new_product)
 
     try:
-         await db.commit() 
-         await db.refresh(new_product)
-    except IntegrityError :
+        await db.commit()
+        await db.refresh(new_product)
 
-         await db.rollback()
+    except IntegrityError:
+        await db.rollback()
 
-         raise HTTPException(
-             status_code=400,
-             detail=" slug already exsits"
-         )
-    
+        raise HTTPException(
+            status_code=400,
+            detail="Slug already exists"
+        )
+
     except SQLAlchemyError:
         await db.rollback()
+
         raise HTTPException(
             status_code=500,
             detail="Failed to create"
         )
-    
-    return new_product
 
+    #  RAG sync
+    try:
+        await sync_product_rag(
+            product_id=new_product.id,
+            db=db
+        )
+
+    except Exception:
+        raise HTTPException(
+            status_code=500,
+            detail="Product created but RAG sync failed"
+        )
+
+    return new_product
 async def create_bulk_products(
     request: list[ProductSchema],
     db: AsyncSession
@@ -207,6 +219,13 @@ async def create_bulk_products(
 
         for product in products:
             await db.refresh(product)
+
+        #  RAG sync for every product
+        for product in products:
+            await sync_product_rag(
+                product_id=product.id,
+                db=db
+            )
 
         return products
 
@@ -279,10 +298,10 @@ async def product_by_id(product_id: int, db: AsyncSession):
 async def get_product_service(
     db: AsyncSession,
     search: str | None = None,
-    category_id: int | None = None,
+    category_slug: str | None = None,
     min_price: Decimal | None = None,
     max_price: Decimal | None = None,
-    sort: str = "latest",
+    sort:str |None = None,
     page: int = 1,
     limit: int = 10,
 ):
@@ -301,10 +320,10 @@ async def get_product_service(
             )
 
         
-        if category_id is not None:
-            query = query.where(
-                Product.category_id == category_id
-            )
+        if category_slug:
+           query = query.where(
+           Product.category.has(slug=category_slug)
+    )
 
    
         if min_price is not None:
@@ -339,10 +358,7 @@ async def get_product_service(
                 Product.price.desc()
             )
 
-        elif sort == "oldest":
-            query = query.order_by(
-                Product.created_at.asc()
-            )
+      
 
         elif sort == "name":
             query = query.order_by(
@@ -564,7 +580,6 @@ async def product_bulk_delete(
 # Product Variant  CRUD 
 
 
-
 async def create_product_variant(
     request: ProductVariantCreateSchema,
     db: AsyncSession
@@ -602,6 +617,19 @@ async def create_product_variant(
             detail="Product variant creation failed"
         )
 
+    #  Update Product RAG
+    try:
+        await sync_product_rag(
+            product_id=new_product_variant.product_id,
+            db=db
+        )
+
+    except Exception:
+        raise HTTPException(
+            status_code=500,
+            detail="Variant created but RAG sync failed"
+        )
+
     return ProductVariantResponseSchema(
         id=new_product_variant.id,
         product_id=new_product_variant.product_id,
@@ -610,8 +638,6 @@ async def create_product_variant(
         sku=new_product_variant.sku,
         stock=new_product_variant.stock
     )
-
-
 async def create_bulk_variant(
     request: list[ProductVariantCreateSchema],
     db: AsyncSession,
@@ -629,20 +655,24 @@ async def create_bulk_variant(
         for variant in variants:
             await db.refresh(variant)
 
+        #  Get unique product IDs
+        product_ids = {
+            variant.product_id
+            for variant in variants
+        }
+
+        #  Sync RAG once per product
+        for product_id in product_ids:
+            await sync_product_rag(
+                product_id=product_id,
+                db=db
+            )
+
         return variants
 
     except SQLAlchemyError:
         await db.rollback()
-        raise   
-
-        
-
-    
-
-    
-
-
-
+        raise
 
 async def get_product_variants(
     product_id: int,

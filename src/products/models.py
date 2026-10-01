@@ -2,7 +2,7 @@ from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Bool
 from sqlalchemy.sql import func
 from src.utils.db import DBModel
 from sqlalchemy.orm import relationship
-
+from pgvector.sqlalchemy import Vector
 
 class Category(DBModel):
 
@@ -59,6 +59,12 @@ class Product(DBModel):
 )
 
     reviews=relationship("Review",back_populates="product",cascade="all,delete-orphan")
+
+    document_chunks = relationship(
+    "DocumentChunkModel",
+    back_populates="product",
+    cascade="all, delete-orphan"
+)
 
   
 
@@ -142,3 +148,22 @@ class Review(DBModel):
     product=relationship("Product",back_populates="reviews")
     order=relationship("Order",back_populates="reviews")
     
+class DocumentChunkModel(DBModel):
+    __tablename__ = "document_chunks"
+
+    id = Column(Integer, primary_key=True, index=True)
+    content = Column(Text, nullable=False)
+    embedding = Column(Vector(384), nullable=False)
+
+    product_id = Column(
+        Integer,
+        ForeignKey("products.id", ondelete="CASCADE"),
+        nullable=True
+    )
+
+  
+
+    product = relationship(
+        "Product",
+        back_populates="document_chunks"
+    )

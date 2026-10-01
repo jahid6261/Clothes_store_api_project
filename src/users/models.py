@@ -1,4 +1,4 @@
-from sqlalchemy import Column,Integer,String,Boolean,DateTime,Enum,func
+from sqlalchemy import Column,Integer,String,Boolean,DateTime,Enum,func,ForeignKey
 
 
 import enum
@@ -40,4 +40,27 @@ class UserModel(DBModel):
 )
 
     reviews=relationship("Review",back_populates="user",cascade="all,delete-orphan")
-    
+    reset_otps = relationship(
+    "PasswordOTP",
+    back_populates="user",
+    cascade="all, delete-orphan"
+)
+
+
+class PasswordOTP(DBModel):
+
+    __tablename__ = "password_reset_otp"
+
+    id=Column(Integer,primary_key=True,index=True)
+
+    user_id=Column(Integer,ForeignKey("users.id",ondelete="CASCADE"),nullable=False,index=True)
+    otp=Column(String(64),nullable=False)
+    expires_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+    )
+
+    is_used=Column(Boolean,default=False,nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    user = relationship("UserModel", back_populates="reset_otps")

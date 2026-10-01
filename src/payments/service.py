@@ -8,7 +8,7 @@ from src.orders.models import Order,Cart
 from src.products.models import ProductVariant
 from src.payments.sslcommerz import SSLCommerz
 from src.payments.schemas import PaymentRequestSchema,PaymentSuccessSchema
-from src.core.task import send_email_service
+from src.core.task import send_payment_success_email
 
 async def create_payment_service(
     request: PaymentRequestSchema,
@@ -178,26 +178,20 @@ async def payment_success_service(
         await db.commit()
         await db.refresh(order)
 
-        send_email_service.delay(
-            email_to=order.email,
-            email_subject=f"Payment Successful - Order #{order.id}",
-            email_body=f"""
-Hello {order.first_name},
 
-Your payment has been completed successfully.
-
-Order ID: {order.id}
-Amount: {order.total_price} BDT
-Transaction ID: {order.transaction_id}
-
-Thank you for shopping with us.
-"""
+        send_payment_success_email(
+            to_email=order.email,
+            first_name=order.first_name,
+            order_id=order.id,
+            amount=order.total_price,
+            transaction_id=order.transaction_id,
         )
 
         return {
             "status": "success",
-            "message": "Payment completed successfully",
-            "order_id": order.id
+            "message": "Payment completed successfully.",
+            "order_id": order.id,
+            "transaction_id": order.transaction_id,
         }
 
     except HTTPException:
@@ -206,11 +200,13 @@ Thank you for shopping with us.
 
     except Exception as e:
         await db.rollback()
+
         raise HTTPException(
-            status_code=500,
-            detail=str(e)
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e),
         )
 
+    
 
 async def payment_cancel_service(
     request: PaymentSuccessSchema,

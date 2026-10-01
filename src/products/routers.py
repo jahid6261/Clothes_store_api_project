@@ -23,48 +23,51 @@ from typing import List,Annotated
 from decimal import Decimal
 from src.depends.admin_check import get_current_admin
 from src.depends.auth_depends import get_current_user
-products_router=APIRouter(prefix="/products",tags=[" Products"])
 
 
 
 # all Category  Routes 
-@products_router.post("/categories",response_model=CategoryResponseSchema)
+
+
+category_router= APIRouter(prefix="/categories",tags=["Categroies"])
+
+@category_router.post("",response_model=CategoryResponseSchema)
 
 async def create_categories(request:CategorySchema,db:AsyncSession=Depends(get_db),user=Depends(get_current_admin)):
 
     return await create_category(request,db)
 
-@products_router.get("/categories",response_model=list[CategoryResponseSchema])
+@category_router.get("",response_model=list[CategoryResponseSchema])
 
 async def all_categories(db:AsyncSession=Depends(get_db)):
     return  await all_category(db)
 
 
-@products_router.get("/categories/{category_id}")
+@category_router.get("/{category_id}")
 async def categorirs_by_id(category_id:int,db:AssertionError=Depends(get_db)):
     return await category_by_id(category_id,db)
 
-@products_router.put("/categories/{category_id}",response_model=CategoryResponseSchema)
+@category_router.put("/{category_id}",response_model=CategoryResponseSchema)
 
 async def update_categories(category_id:int,request:CategoryUpdateSchema,db:AsyncSession=Depends(get_db),
                             user=Depends(get_current_admin)):
     return await update_category(category_id,request,db)
 
-@products_router.patch("/categories/{category_id}",response_model=CategoryResponseSchema)
+@category_router.patch("/{category_id}",response_model=CategoryResponseSchema)
 
 async def pathc_categories(category_id:int, request:CategoryPatchSchema,db:AsyncSession=Depends(get_db),
                 user=Depends(get_current_admin)):
     return await patch_category(category_id,request,db)
 
 
-@products_router.delete("/categories/{category_id}")
+@category_router.delete("/{category_id}")
 
 async def delete_categories(category_id:int,db:AsyncSession=Depends(get_db),
                             user=Depends(get_current_admin)):
     return await  delete_category(category_id,db)
 
 
-@products_router.delete("/categories")
+@category_router.delete("/")
 async def bulk_delete_categories(request:CategoryBulkDeleteSchema,db:AsyncSession=Depends(get_db),
                                  user=Depends(get_current_admin)):
 
@@ -73,9 +76,11 @@ async def bulk_delete_categories(request:CategoryBulkDeleteSchema,db:AsyncSessio
 
 
 # all Products Routes 
+products_router=APIRouter(prefix="/products",tags=[" Products"])
 
 
-@products_router.post("/",response_model=ProductResponseSchema)
+
+@products_router.post("/",response_model=ProductBulkResponseSchema)
 
 async def  product_create(request:ProductSchema,db:AsyncSession=Depends(get_db),
                           user=Depends(get_current_admin)):
@@ -115,7 +120,7 @@ async def get_product(product_id:int,db:AsyncSession=Depends(get_db)):
 )
 async def product_get(
     search: Annotated[str | None, Query(description="Search product")] = None,
-    category_id: Annotated[int | None, Query(gt=0)] = None,
+    category_slug: Annotated[str | None, Query()] = None,
     min_price: Annotated[Decimal | None, Query(ge=0)] = None,
     max_price: Annotated[Decimal | None, Query(ge=0)] = None,
     sort: Annotated[str, Query(description="Sort products")] = "latest",
@@ -126,7 +131,7 @@ async def product_get(
     return await get_product_service(
         db=db,
         search=search,
-        category_id=category_id,
+        category_slug=category_slug,
         min_price=min_price,
         max_price=max_price,
         sort=sort,

@@ -2,7 +2,7 @@ from jose import jwt
 import bcrypt
 from datetime import datetime,timedelta,timezone
 from src.utils.settings import settings
-
+import hashlib
 SECRET_KEY=settings.SECRET_KEY
 ALGORITHM=settings.ALGORITHM
 
@@ -40,3 +40,8 @@ def hash_password(password:str):
 def verify_password(password:str,hashed_pass:str):
 
     return bcrypt.checkpw(password.encode('utf-8'),hashed_pass.encode('utf-8'))
+
+def hash_otp(otp: str) -> str:
+    return hashlib.sha256(
+        otp.encode("utf-8")
+    ).hexdigest()
