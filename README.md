@@ -75,7 +75,7 @@ Send Confirmation Email
 
 ---
 
-## 📧 Email & Background Tasks
+# 📧 Email & Background Tasks
 
 Email automation is implemented using **Celery + RabbitMQ**.
 
@@ -111,7 +111,7 @@ The project includes an AI shopping assistant powered by:
 
 The assistant uses product information stored in the database to answer shopping-related questions.
 
-### RAG Pipeline
+## RAG Pipeline
 
 ```text
 User Query
@@ -133,9 +133,11 @@ AI Response
 
 ```text
 User:
+
 Show me a cotton t-shirt under 1000 BDT.
 
 AI:
+
 I found cotton t-shirts matching your price range...
 ```
 
@@ -149,13 +151,19 @@ sentence-transformers/all-MiniLM-L6-v2
 
 The embeddings are stored in PostgreSQL using **pgvector** for semantic similarity search.
 
-This allows the AI assistant to understand queries beyond simple keyword matching.
+This allows the AI assistant to understand product-related queries beyond simple keyword matching.
 
 ---
 
 # 🐳 Docker
 
-The application is containerized using Docker Compose.
+The application is containerized using **Docker Compose**.
+
+The FastAPI application image is available on Docker Hub:
+
+```text
+jahidalam/clothstore-api:latest
+```
 
 Main services:
 
@@ -166,17 +174,31 @@ Main services:
 * RabbitMQ
 * Celery Worker
 
-Run:
+The application uses the pre-built Docker Hub image, so clients do **not** need to build the FastAPI image locally.
+
+### Start the application
 
 ```bash
-docker compose build
+docker compose pull
 docker compose up -d
 ```
 
-Check services:
+### Check services
 
 ```bash
 docker compose ps
+```
+
+### View logs
+
+```bash
+docker compose logs -f web
+```
+
+### Stop services
+
+```bash
+docker compose down
 ```
 
 ---
@@ -229,12 +251,13 @@ docker compose ps
 * Docker Compose
 * Git
 * GitHub
+* Docker Hub
 
-
+---
 
 # ⚙️ Installation
 
-Clone the repository:
+## 1. Clone the Repository
 
 ```bash
 git clone https://github.com/jahid6261/Clothes_store_api_project.git
@@ -242,10 +265,16 @@ git clone https://github.com/jahid6261/Clothes_store_api_project.git
 cd Clothes_store_api_project
 ```
 
-Create a `.env` file and configure:
+## 2. Configure Environment Variables
+
+Create a `.env` file:
 
 ```env
 DATABASE_URL=
+
+POSTGRES_USER=
+POSTGRES_PASSWORD=
+POSTGRES_DB=
 
 SECRET_KEY=
 ALGORITHM=HS256
@@ -274,25 +303,44 @@ SSLCOMMERZ_CANCEL_URL=
 
 ADMIN_EMAIL=
 ADMIN_PASSWORD=
+
+RABBITMQ_DEFAULT_USER=
+RABBITMQ_DEFAULT_PASS=
 ```
 
-Run Docker:
+> **Important:** Never commit the real `.env` file to GitHub. Use `.env.example` for sharing the required environment variables.
+
+## 3. Pull Docker Images
+
+```bash
+docker compose pull
+```
+
+## 4. Start the Application
 
 ```bash
 docker compose up -d
 ```
 
-Run migrations:
+## 5. Run Database Migrations
 
 ```bash
 docker compose exec web alembic upgrade head
+```
+
+## 6. Check Running Containers
+
+```bash
+docker compose ps
 ```
 
 ---
 
 # 🤖 Ollama Setup
 
-Install Ollama and pull the Phi-3 model:
+The AI assistant uses **Ollama + Phi-3**.
+
+Install Ollama on the host machine and pull the model:
 
 ```bash
 ollama pull phi3
@@ -304,7 +352,9 @@ Start Ollama:
 ollama serve
 ```
 
-AI endpoint:
+> **Note:** The FastAPI container must be able to reach the Ollama service. When running Ollama directly on the host machine, configure the application's Ollama URL according to the Docker host networking setup.
+
+### AI Endpoint
 
 ```http
 POST /ai/chat
@@ -322,15 +372,82 @@ Example request:
 
 # 📚 API Documentation
 
-Swagger UI:
+After starting the application:
+
+### Swagger UI
 
 ```text
 http://localhost:8001/docs
 ```
 
+### ReDoc
 
+```text
+http://localhost:8001/redoc
+```
 
+---
 
+# 🔄 Application Architecture
+
+```text
+                    Client
+                      │
+                      ▼
+              FastAPI Application
+                      │
+        ┌─────────────┼─────────────┐
+        │             │             │
+        ▼             ▼             ▼
+   PostgreSQL     RabbitMQ      Cloudinary
+   + pgvector         │
+                      ▼
+                 Celery Worker
+                      │
+                      ▼
+                 Email Service
+
+                      │
+                      ▼
+                 AI Assistant
+                      │
+              ┌───────┴────────┐
+              ▼                ▼
+        pgvector RAG         Ollama
+              │                │
+              └───────┬────────┘
+                      ▼
+                  Phi-3
+```
+
+---
+
+# 📦 Docker Services
+
+| Service             | Purpose             |  Port |
+| ------------------- | ------------------- | ----: |
+| FastAPI             | Backend API         |  8001 |
+| PostgreSQL          | Database + pgvector |  5433 |
+| PgAdmin             | Database management |  5051 |
+| RabbitMQ            | Message broker      |  5673 |
+| RabbitMQ Management | RabbitMQ dashboard  | 15673 |
+
+---
+
+# 🔑 Important Environment Variables
+
+The application requires external services for some features:
+
+* PostgreSQL
+* RabbitMQ
+* Cloudinary
+* SMTP/Email
+* SSLCommerz
+* Ollama
+
+Without the corresponding credentials/configuration, those specific features will not work.
+
+---
 
 # 👨‍💻 Author
 
@@ -341,4 +458,5 @@ Python Backend Developer
 **Tech:** FastAPI • PostgreSQL • Docker • Celery • RabbitMQ • AI/RAG
 
 GitHub:
+
 https://github.com/jahid6261
